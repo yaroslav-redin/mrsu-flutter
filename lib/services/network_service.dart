@@ -133,4 +133,27 @@ class NetworkService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(StorageKeys.accessToken);
   }
+
+  Future<void> saveCredentials(String username, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(StorageKeys.rememberMe, true);
+    await prefs.setString(StorageKeys.savedUsername, username);
+    await prefs.setString(StorageKeys.savedPassword, password);
+  }
+
+  Future<void> clearCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(StorageKeys.rememberMe, false);
+    await prefs.remove(StorageKeys.savedUsername);
+    await prefs.remove(StorageKeys.savedPassword);
+  }
+
+  Future<Map<String, String?>> getSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'username': prefs.getString(StorageKeys.savedUsername),
+      'password': prefs.getString(StorageKeys.savedPassword),
+      'rememberMe': prefs.getBool(StorageKeys.rememberMe).toString(),
+    };
+  }
 }

@@ -30,4 +30,7 @@ class StorageKeys {
   static const String accessToken = 'access_token';
   static const String isDarkTheme = 'isDark';
   static const String colorThemeName = 'colorThemeName';
+  static const String rememberMe = 'rememberMe';
+  static const String savedUsername = 'savedUsername';
+  static const String savedPassword = 'savedPassword';
 }

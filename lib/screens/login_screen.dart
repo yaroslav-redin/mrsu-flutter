@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/network_service.dart';
 import '../services/theme_provider.dart';
+import '../core/env.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +19,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _networkService = NetworkService();
   bool _isLoading = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  void _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool(StorageKeys.rememberMe) ?? false;
+    if (rememberMe) {
+      setState(() {
+        _rememberMe = true;
+        _usernameController.text = prefs.getString(StorageKeys.savedUsername) ?? '';
+        _passwordController.text = prefs.getString(StorageKeys.savedPassword) ?? '';
+      });
+    }
+  }
 
   void _performLogin() async {
     final username = _usernameController.text.trim();
@@ -36,6 +57,13 @@ class _LoginScreenState extends State<LoginScreen> {
         final jsonResponse = json.decode(response);
         if (jsonResponse.containsKey('access_token')) {
           await _networkService.saveToken(jsonResponse['access_token']);
+          
+          if (_rememberMe) {
+            await _networkService.saveCredentials(username, password);
+          } else {
+            await _networkService.clearCredentials();
+          }
+
           if (mounted) Navigator.pushReplacementNamed(context, '/home');
         }
       } catch (e) {
@@ -186,7 +214,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           obscureText: true,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 12),
+                        // Remember Me Checkbox
+                        Theme(
+                          data: Theme.of(context).copyWith(
+                            unselectedWidgetColor: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                          child: CheckboxListTile(
+                            title: Text(
+                              'Запомнить меня',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                            value: _rememberMe,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                            activeColor: themeProvider.primaryColor,
+                            checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                         _isLoading
                             ? const CircularProgressIndicator()
                             : ElevatedButton(
