@@ -1,5 +1,6 @@
 # flutter_mrsu
 
+<img src="assets/logo.png" alt="Login Screen" width="300">
 MRSU app on Flutter by Yaroslav Redin
 
 ## Getting Started
